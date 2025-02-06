@@ -21,20 +21,12 @@ def validate_timestamps(data):
     while current_time < expected_end_time:
         expected_timestamps.append(current_time)
         current_time += timedelta(minutes=15)
-        
-    expected_timestamps = [
-        expected_start_time + timedelta(minutes=15 * i) for i in range(
-            (int((expected_end_time - expected_start_time).total_seconds() / 60) // 15) + 1
-        )
-    ]
 
+    # Find missing timestamps
     missing_timestamps = [ts for ts in expected_timestamps if ts not in timestamps]
-    
+
     if missing_timestamps:
         return False, f"Missing timestamps: {', '.join([ts.strftime('%d.%m.%Y %H:%M') for ts in missing_timestamps])}"
-
-    if len(timestamps) != len(expected_timestamps) or any(ts != et for ts, et in zip(timestamps, expected_timestamps)):
-        return False, "Timestamps do not match required 15-minute intervals."
 
     return True, "Validation passed."
 
@@ -56,6 +48,17 @@ def validate_file(input_file, col1=None, col2=None):
     reader = csv.reader(data_lines, delimiter=';')
     header = next(reader)
 
+    extracted_data = []
+    for row in reader:
+        if len(row) >= len(header) and all(cell.strip() for cell in row):
+            extracted_data.append(row)
+        else:
+            return False, "Missing data in one or more columns."
+
+    valid, message = validate_timestamps(extracted_data)
+    if not valid:
+        return False, message  # Now correctly returns missing timestamp error!
+
     if col1 and col2:
         if col1 not in header or col2 not in header:
             return False, f"Invalid columns selected. Available: {', '.join(header)}"
@@ -64,14 +67,15 @@ def validate_file(input_file, col1=None, col2=None):
         col1_idx = header.index(col1)
         col2_idx = header.index(col2)
 
-        extracted_data = [["Datum/Zeit", col1, col2]]
-        for row in reader:
+        processed_data = [["Datum/Zeit", col1, col2]]
+        for row in extracted_data:
             if len(row) > max(timestamp_idx, col1_idx, col2_idx):
-                extracted_data.append([row[timestamp_idx], row[col1_idx], row[col2_idx]])
+                processed_data.append([row[timestamp_idx], row[col1_idx], row[col2_idx]])
 
-        return True, extracted_data
+        return True, processed_data
 
     return True, header  # Return header if no columns are selected yet
+
 # Validate all files in a folder
 def validate_folder(folder_path):
     valid_files = []
@@ -81,18 +85,9 @@ def validate_folder(folder_path):
         if file_name.endswith(".txt"):
             input_file = os.path.join(folder_path, file_name)
             
-            # Only check if the file has a valid structure, not specific columns
-            with open(input_file, 'r', encoding='latin1') as file:
-                lines = file.readlines()
-
-            header_index = None
-            for i, line in enumerate(lines):
-                if line.strip().startswith("Datum/Zeit"):
-                    header_index = i
-                    break
-
-            if header_index is None:
-                log.append(f"{file_name}: No header found.")
+            valid, message = validate_file(input_file)
+            if not valid:
+                log.append(f"{file_name}: {message}")
                 continue
 
             valid_files.append(file_name)
@@ -146,7 +141,7 @@ def main():
         print("No valid files found. Exiting.")
         return
 
-    print("\nWhich files do you want to process?")
+    print("\nWhich files do you want to process? (comma-separated)")
     user_input = input("> ").strip()
     files_to_process = [file.strip() for file in user_input.split(",") if file.strip() in valid_files]
 
@@ -154,14 +149,11 @@ def main():
         print("No valid files selected. Exiting.")
         return
 
-     # Ask for columns once instead of per file
+    # Extract header from the first selected file
     sample_file = os.path.join(input_folder, files_to_process[0])
     with open(sample_file, 'r', encoding='latin1') as file:
         lines = file.readlines()
 
-    header = next(csv.reader(lines, delimiter=';'))
-
-    # Find the line where "Datum/Zeit" appears
     header_index = None
     for i, line in enumerate(lines):
         if "Datum/Zeit" in line:
@@ -174,13 +166,11 @@ def main():
 
     data_lines = lines[header_index:]
     reader = csv.reader(data_lines, delimiter=';')
-
-    # Extract the header from the line containing "Datum/Zeit"
     header = next(reader)
 
-    # Print available columns line by line (without numbering)
+    # Print available columns
     print("\nAvailable columns:")
-    for col in header:  # We will now print all columns from the header
+    for col in header:
         print(col)
 
     col1 = input("\nEnter the first column name to extract: ").strip()
