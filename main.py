@@ -105,7 +105,7 @@ def validate_folder(folder_path):
     return valid_files
 
 # Process and save extracted data
-def process_files(files, input_folder, col1, col2, output_file="Wernau_Output.xlsx"):
+def process_files(files, input_folder, col1, col2, output_folder, output_file="Wernau_Output.xlsx"):
     all_data = []
     header = ["Datum/Zeit", col1, col2]
 
@@ -120,9 +120,10 @@ def process_files(files, input_folder, col1, col2, output_file="Wernau_Output.xl
         all_data.extend(data[1:])  # Append without header to avoid duplicates
 
     if all_data:
+        output_file_path = os.path.join(output_folder, output_file)
         df = pd.DataFrame(all_data, columns=header)
-        df.to_excel(output_file, index=False)
-        print(f"\nAll data saved to {output_file}.")
+        df.to_excel(output_file_path, index=False)
+        print(f"\nAll data saved to {output_file_path}.")
     else:
         print("\nNo valid data to save.")
 
@@ -180,8 +181,15 @@ def main():
         print(f"Invalid column names. Please choose from: {', '.join(header)}")
         return
 
+    # Prompt for output folder path
+    while True:
+        output_folder = input("\nEnter the folder path to save the output file: ").strip()
+        if os.path.exists(output_folder):
+            break
+        print("Folder does not exist. Please enter a valid folder path.")
+
     print("\nProcessing files...")
-    process_files(files_to_process, input_folder, col1, col2)
+    process_files(files_to_process, input_folder, col1, col2, output_folder) #Pass output_folder for output file
 
 if __name__ == "__main__":
     main()
