@@ -32,5 +32,5 @@ and
 ### Install dependencies
 `pip install -r requirements.txt`
 
-### Run the script and save output
-'python main.py'
+### Run the script and follow the instruction to get the Output
+`python main.py`
