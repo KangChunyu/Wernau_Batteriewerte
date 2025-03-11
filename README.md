@@ -11,16 +11,18 @@
 
 To run this project, you need the following Python packages:
 
-- `Python`: Need to install Python first for running the program.
+- `Python`: Need to install Python first for running the program. -> https://www.python.org/downloads/
+- `Git`: Install Git to be able to clone the repository -> https://git-scm.com/downloads
 - `pandas`: For data handling and writing to Excel files.
 - `openpyxl`: Excel writer support for `pandas`.
 
-## How to Use
+## How to Use the Project
 
-### Clone the repository
-`git clone <your-repo-url>`
-and 
-`cd <repository-name>`
+### Clone the repository to your Desktop
+`git clone https://github.com/KangChunyu/Wernau_Batteriewerte.git $HOME\Desktop\Wernau_Batteriewerte`
+
+### Direct to the designate cloned Folder 
+`cd $HOME\Desktop\Wernau_Batteriewerte`
 
 ### (Optional) Create and activate a virtual environment
 `python -m venv venv` 
@@ -30,8 +32,5 @@ and
 ### Install dependencies
 `pip install -r requirements.txt`
 
-### Create an output folder
-mkdir output
-
 ### Run the script and save output
-python main.py > output/result.txt
+'python main.py'
