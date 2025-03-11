@@ -21,4 +21,22 @@ pip install -r requirements.txt
 
 ## How to Use
 
-- Open Terminal, Type python main.py and follow the instructions in the Terminal 
+# Clone the repository
+git clone <your-repo-url>
+cd <repository-name>
+
+# (Optional) Create and activate a virtual environment
+python -m venv venv
+# Windows
+venv\Scripts\activate
+# macOS/Linux
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Create an output folder
+mkdir output
+
+# Run the script and save output
+python main.py > output/result.txt
